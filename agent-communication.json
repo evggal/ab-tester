@@ -1,0 +1,77 @@
+{
+  "title": "Lid agent communication contract",
+  "version": "1.0.0",
+  "coordination_model": "All subagents report to lid. Lid alone delegates work and routes handoffs.",
+  "notification_protocol": {
+    "name": "OpenSpec",
+    "required_agents": ["requirements-analyst", "compliance-analyst"],
+    "purpose": "Notify Lid of requirements, acceptance criteria, compliance assessments, and correction requests using the common envelope."
+  },
+  "common_envelope": {
+    "required_fields": [
+      "task_id",
+      "cycle",
+      "sender",
+      "recipient",
+      "message_type",
+      "status",
+      "summary",
+      "evidence",
+      "next_action"
+    ],
+    "field_rules": {
+      "task_id": "Stable ID assigned by Lid.",
+      "cycle": "Integer from 0 to 5; use 0 before corrective work begins.",
+      "sender": "Configured agent ID that produced the handoff.",
+      "recipient": "Always lid for subagent handoffs; Lid names the intended next specialist in next_action.",
+      "message_type": "One of requirement, architecture, implementation, integration, code_review, test_report, compliance_assessment, correction_request, documentation, or unresolved_error_report.",
+      "status": "One of accepted, complete, blocked, failed, needs_correction, or approved.",
+      "summary": "Short result statement, including affected scope.",
+      "evidence": "File paths, test commands/results, requirement IDs, logs, screenshots, or reproducible steps; say not_available when none exists.",
+      "next_action": "Concrete action, owning agent, and acceptance condition."
+    }
+  },
+  "task_classification": {
+    "lite": {
+      "definition": "A localized, low-risk change with no data, API, architecture, deployment, or cross-component impact; for example, renaming a frontend button.",
+      "pipeline": ["relevant-development-agent", "code-reviewer"],
+      "completion": "Code reviewer reports no blocking findings."
+    },
+    "medium": {
+      "definition": "A bounded feature or fix that affects one or more components but does not require a new system architecture or every specialty.",
+      "pipeline": ["requirements-analyst", "relevant-development-agent", "code-reviewer", "system-tester", "compliance-analyst", "technical-writer"],
+      "completion": "Compliance analyst approves all applicable requirements and quality criteria."
+    },
+    "hard": {
+      "definition": "A cross-cutting, high-risk, or architecture-changing task with database, backend, frontend, integration, operational, security, or major quality impact.",
+      "pipeline": ["requirements-analyst", "architect", "database-developer", "backend-developer-api", "backend-developer-services", "frontend-developer-ui", "frontend-developer-ux", "devops", "code-reviewer", "system-tester", "compliance-analyst", "technical-writer"],
+      "completion": "Compliance analyst approves all requirements and quality criteria after evidence from every applicable specialist."
+    }
+  },
+  "compliance_error_routing": {
+    "requirements": "requirements-analyst",
+    "architecture": "architect",
+    "database": "database-developer",
+    "backend_api": "backend-developer-api",
+    "backend_service": "backend-developer-services",
+    "frontend_ui": "frontend-developer-ui",
+    "frontend_ux": "frontend-developer-ux",
+    "infrastructure_or_integration": "devops",
+    "code_quality": "relevant-development-agent",
+    "test_evidence": "system-tester"
+  },
+  "cycle_limit": {
+    "maximum_remediation_cycles": 5,
+    "cycle_definition": "A routed correction followed by the required code review, system testing, and compliance reassessment.",
+    "on_unresolved_after_limit": "Lid asks technical-writer for an unresolved_error_report addressed to the user; it must list unresolved findings, attempted cycles, impact, blockers, and recommended next actions."
+  },
+  "communication_rules": [
+    "Read the current requirements, acceptance criteria, and prior handoffs before starting work.",
+    "Return one structured envelope to Lid when work is complete, blocked, or needs correction.",
+    "Never claim completion without evidence relevant to the role.",
+    "Report blockers and contract conflicts immediately; do not silently change another agent's scope.",
+    "Reference requirement IDs and acceptance criteria in review, test, and compliance findings.",
+    "Code-review and compliance findings must be actionable and identify severity, affected scope, evidence, and acceptance condition.",
+    "Only Lid may delegate to another subagent or classify a task."
+  ]
+}
