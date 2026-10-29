@@ -10,6 +10,8 @@ The project needs a traceable foundation for collecting product and agent-develo
 - Add versioned, configurable metric definitions and asynchronous A/B aggregation with reproducible result snapshots.
 - Add OpenSpec-notification ingestion, agent-work tracking, and provider-reported or estimated token-usage accounting.
 - Add DataLens-safe reporting views, data-quality warnings, and access controls, auditing, and redaction.
+- Separate user-facing experiment analytics from restricted development, agent-work, and token-consumption analytics.
+- Enforce least-context agent coordination: each specialist receives only Lid's scoped task packet and returns results only to Lid.
 - Establish the FastAPI, React/TypeScript, PostgreSQL, worker, and DataLens architecture for the initial release.
 
 ## Capabilities
@@ -31,3 +33,4 @@ None.
 - New FastAPI APIs for experiment management, assignment, event ingestion, OpenSpec notifications, and reporting.
 - New PostgreSQL schema, aggregation worker, DataLens read-only reporting views, and operational configuration.
 - Integration with the existing `agent-communication.json` contract and configured Lid/subagent workflow.
+- Scoped agent workspaces, permissions, and handoff packets that prevent cross-specialty source access.

@@ -26,3 +26,10 @@ The system SHALL record prompt, completion, cached, and total token consumption 
 #### Scenario: Provider omits usage values
 - **WHEN** a model provider does not return token usage and the system calculates an approximation
 - **THEN** the stored usage record is marked estimated
+
+### Requirement: Least-context agent handoffs
+The system SHALL route all specialist communication through Lid using scoped assignment and result packets. A packet SHALL include only the objective, authorized scope, necessary contracts, acceptance criteria, and evidence needed by its recipient.
+
+#### Scenario: Specialist completes scoped work
+- **WHEN** a specialist completes or blocks an assigned task
+- **THEN** it returns a result packet only to Lid without accessing or disclosing another specialist's work history

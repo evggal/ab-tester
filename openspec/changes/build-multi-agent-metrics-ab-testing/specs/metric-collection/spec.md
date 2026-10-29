@@ -33,3 +33,10 @@ The system SHALL identify insufficient sample size, missing exposures, unbalance
 #### Scenario: Incomplete analysis window
 - **WHEN** a requested analysis period overlaps data that has not completed processing
 - **THEN** the result includes an incomplete-window warning
+
+### Requirement: Safe ratio and significance calculation
+The system SHALL return `null` with an insufficient-data quality flag when a ratio or conversion denominator is zero or below the configured minimum sample size. The initial default SHALL use a two-sided alpha of 0.05 and a 95% confidence interval.
+
+#### Scenario: Zero denominator
+- **WHEN** a requested ratio metric has a zero denominator
+- **THEN** the system returns no numeric value, uplift, or significance decision and includes a zero-denominator quality flag

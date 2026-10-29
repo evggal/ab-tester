@@ -1,14 +1,15 @@
 {
   "title": "Lid agent communication contract",
-  "version": "1.0.0",
-  "coordination_model": "All subagents report to lid. Lid alone delegates work and routes handoffs.",
+  "version": "1.1.0",
+  "coordination_model": "Lid is the sole router. A specialist receives a minimal assignment packet only from Lid and returns a minimal result packet only to Lid.",
   "notification_protocol": {
     "name": "OpenSpec",
     "required_agents": ["requirements-analyst", "compliance-analyst"],
-    "purpose": "Notify Lid of requirements, acceptance criteria, compliance assessments, and correction requests using the common envelope."
+    "purpose": "Notify Lid of requirements, acceptance criteria, compliance assessments, and correction requests using the scoped common envelope."
   },
   "common_envelope": {
     "required_fields": [
+      "handoff_id",
       "task_id",
       "cycle",
       "sender",
@@ -17,9 +18,11 @@
       "status",
       "summary",
       "evidence",
-      "next_action"
+      "next_action",
+      "scope_id"
     ],
     "field_rules": {
+      "handoff_id": "Unique ID assigned by Lid for this packet.",
       "task_id": "Stable ID assigned by Lid.",
       "cycle": "Integer from 0 to 5; use 0 before corrective work begins.",
       "sender": "Configured agent ID that produced the handoff.",
@@ -28,8 +31,57 @@
       "status": "One of accepted, complete, blocked, failed, needs_correction, or approved.",
       "summary": "Short result statement, including affected scope.",
       "evidence": "File paths, test commands/results, requirement IDs, logs, screenshots, or reproducible steps; say not_available when none exists.",
-      "next_action": "Concrete action, owning agent, and acceptance condition."
+      "next_action": "Concrete action, owning agent, and acceptance condition.",
+      "scope_id": "Identifier of the authorized ownership scope and task packet."
     }
+  },
+  "handoff_templates": {
+    "assignment_packet": {
+      "sender": "lid",
+      "recipient": "assigned specialist only",
+      "required_fields": ["handoff_id", "task_id", "cycle", "scope_id", "objective", "allowed_paths", "allowed_requirements", "provided_contracts", "acceptance_criteria", "verification_expectations"],
+      "field_rules": {
+        "objective": "A bounded task statement with no unrelated project history.",
+        "allowed_paths": "Only paths the specialist may read or modify for this assignment.",
+        "allowed_requirements": "Only requirement IDs needed to complete the task.",
+        "provided_contracts": "Only interface, schema, fixture, or result artifacts required at the boundary.",
+        "acceptance_criteria": "Observable completion conditions for this assignment.",
+        "verification_expectations": "Permitted verification evidence or controlled test result required by Lid."
+      },
+      "forbidden_content": ["other-agent source code", "other-agent private reasoning", "unrelated handoff history", "unrelated requirements", "secrets", "full-project context"]
+    },
+    "result_packet": {
+      "sender": "assigned specialist only",
+      "recipient": "lid",
+      "required_fields": ["handoff_id", "task_id", "cycle", "scope_id", "status", "summary", "changed_artifacts", "provided_contracts", "verification", "blockers", "next_action"],
+      "field_rules": {
+        "changed_artifacts": "Only artifacts inside allowed_paths; use an empty array if no file changed.",
+        "provided_contracts": "Stable outputs the next specialist needs, without disclosing unrelated source or history.",
+        "verification": "Commands, results, test evidence, or controlled-run evidence for the assigned scope.",
+        "blockers": "Concrete missing contract or authorization information; do not request broad repository access."
+      }
+    }
+  },
+  "ownership_scopes": {
+    "database-developer": ["database/**", "migrations/**"],
+    "backend-developer-api": ["backend/api/**", "contracts/api/**", "tests/backend/api/**"],
+    "backend-developer-services": ["backend/services/**", "tests/backend/services/**"],
+    "frontend-developer-ui": ["frontend/app/**", "tests/frontend/app/**"],
+    "frontend-developer-ux": ["frontend/design-system/**", "frontend/styles/**", "tests/frontend/design-system/**"],
+    "devops": ["infra/**", "deployment/**", ".github/**", "docker-compose*.yml"],
+    "system-tester": ["tests/system/**", "test-results/**"],
+    "technical-writer": ["docs/**"],
+    "requirements-analyst": ["openspec/specs/**", "openspec/changes/**/specs/**"],
+    "architect": ["architecture/**", "openspec/changes/**/design.md"],
+    "code-reviewer": ["review-bundles/**"],
+    "compliance-analyst": []
+  },
+  "access_policy": {
+    "least_context": "Specialists receive only an assignment packet and the explicitly supplied boundary contracts. Other specialties are black boxes.",
+    "history_isolation": "Lid does not forward another specialist's task history, private reasoning, source tree, or unrelated result packets.",
+    "communication": "Specialists never address another specialist directly and never delegate. Every question, blocker, result, and correction returns to Lid.",
+    "filesystem": "Read, glob, grep, and edit access is denied outside the ownership scope. Unrestricted shell access is denied because it can bypass path boundaries.",
+    "review": "Code review is performed from a Lid-curated read-only review bundle containing only the changed artifacts, applicable requirements, contracts, and verification evidence."
   },
   "task_classification": {
     "lite": {
@@ -66,12 +118,14 @@
     "on_unresolved_after_limit": "Lid asks technical-writer for an unresolved_error_report addressed to the user; it must list unresolved findings, attempted cycles, impact, blockers, and recommended next actions."
   },
   "communication_rules": [
-    "Read the current requirements, acceptance criteria, and prior handoffs before starting work.",
-    "Return one structured envelope to Lid when work is complete, blocked, or needs correction.",
+    "Use only the assignment packet, allowed paths, requirement IDs, and boundary contracts supplied by Lid.",
+    "Treat every other specialist's implementation, history, and internal decisions as a black box.",
+    "Return one structured result packet to Lid when work is complete, blocked, or needs correction.",
     "Never claim completion without evidence relevant to the role.",
     "Report blockers and contract conflicts immediately; do not silently change another agent's scope.",
     "Reference requirement IDs and acceptance criteria in review, test, and compliance findings.",
     "Code-review and compliance findings must be actionable and identify severity, affected scope, evidence, and acceptance condition.",
-    "Only Lid may delegate to another subagent or classify a task."
+    "Only Lid may delegate to another subagent, classify a task, or disclose a cross-boundary contract.",
+    "Do not inspect, search, modify, or request access to files outside the allowed ownership scope."
   ]
 }

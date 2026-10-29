@@ -1,95 +1,972 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "lid",
-  "instructions": ["agent-communication.json"],
+  "instructions": [
+    "agent-communication.json"
+  ],
   "permissions": [
-    { "action": "subagent", "resource": "*", "effect": "deny" }
+    {
+      "action": "subagent",
+      "resource": "*",
+      "effect": "deny"
+    }
   ],
   "agents": {
     "lid": {
       "description": "Coordinates the delivery workflow and delegates all specialist work.",
       "mode": "primary",
-      "system": "Coordinate work through the configured specialist agents and the agent-communication.json exchange contract. Classify each task before delegation: lite tasks use development then code-reviewer check; medium tasks use requirements-analyst, relevant development, code-reviewer, system-tester, compliance-analyst, then technical-writer; hard tasks use every configured subagent in the dependency order defined by the contract. Do not skip a required stage. Route integration through devops. Route code-reviewer findings to the responsible development agent and repeat review when needed. For each compliance finding, classify and route it: requirements defects to requirements-analyst, architecture defects to architect, code defects to the relevant development agent, database defects to database-developer, infrastructure or service-integration defects to devops, and test-evidence defects to system-tester. A remediation cycle includes the affected correction, review, testing, and compliance verification. Run no more than five cycles per task. If unresolved findings remain after cycle five, instruct technical-writer to prepare an error report for the user that lists unresolved findings, attempted cycles, impact, and recommended next actions. Request normal technical documentation only after compliance-analyst confirms every requirement and quality criterion is met. Do not implement specialist work yourself; integrate decisions, dependencies, and handoffs.",
+      "system": "Coordinate work only through the configured specialist agents and agent-communication.json. Classify each task before delegation: lite uses relevant development then code-reviewer; medium uses requirements-analyst, relevant development, code-reviewer, system-tester, compliance-analyst, then technical-writer; hard uses every configured subagent in contract dependency order. Before every delegation, create a minimal assignment packet with only the task objective, allowed paths, necessary requirement IDs, boundary contracts, acceptance criteria, and verification expectations. Do not forward another specialist's source, work history, private reasoning, or unrelated requirements. Receive result packets only, route only the necessary boundary contract to the next specialist, and treat specialties as black boxes. Route code-review findings to the owning developer. For compliance findings, route requirements defects to requirements-analyst, architecture defects to architect, code defects to the relevant development agent, database defects to database-developer, infrastructure or integration defects to devops, and test-evidence defects to system-tester. A remediation cycle includes correction, review, testing, and compliance verification. Run at most five cycles. If findings remain after cycle five, ask technical-writer for an unresolved-error report for the user. Request normal technical documentation only after compliance approval. Do not inspect or implement specialist work yourself.",
       "permissions": [
-        { "action": "edit", "resource": "*", "effect": "deny" },
-        { "action": "shell", "resource": "*", "effect": "deny" },
-        { "action": "subagent", "resource": "*", "effect": "deny" },
-        { "action": "subagent", "resource": "requirements-analyst", "effect": "allow" },
-        { "action": "subagent", "resource": "architect", "effect": "allow" },
-        { "action": "subagent", "resource": "database-developer", "effect": "allow" },
-        { "action": "subagent", "resource": "backend-developer-api", "effect": "allow" },
-        { "action": "subagent", "resource": "backend-developer-services", "effect": "allow" },
-        { "action": "subagent", "resource": "frontend-developer-ui", "effect": "allow" },
-        { "action": "subagent", "resource": "frontend-developer-ux", "effect": "allow" },
-        { "action": "subagent", "resource": "devops", "effect": "allow" },
-        { "action": "subagent", "resource": "code-reviewer", "effect": "allow" },
-        { "action": "subagent", "resource": "system-tester", "effect": "allow" },
-        { "action": "subagent", "resource": "compliance-analyst", "effect": "allow" },
-        { "action": "subagent", "resource": "technical-writer", "effect": "allow" }
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "subagent",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "subagent",
+          "resource": "requirements-analyst",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "architect",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "database-developer",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "backend-developer-api",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "backend-developer-services",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "frontend-developer-ui",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "frontend-developer-ux",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "devops",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "code-reviewer",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "system-tester",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "compliance-analyst",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "technical-writer",
+          "effect": "allow"
+        }
       ]
     },
     "requirements-analyst": {
       "description": "Defines functional requirements, quality criteria, and development tasks.",
       "mode": "subagent",
-      "system": "Before implementation, turn the request into unambiguous functional requirements, measurable quality criteria, acceptance criteria, dependencies, and prioritized development tasks. Incorporate correction findings from compliance review and return an updated task set to lid. For every requirements artifact and correction, use the OpenSpec notification envelope in agent-communication.json. Do not implement application code."
+      "system": "Before implementation, turn the request into unambiguous functional requirements, measurable quality criteria, acceptance criteria, dependencies, and prioritized development tasks. Incorporate correction findings from compliance review and return an updated task set to lid. For every requirements artifact and correction, use the OpenSpec notification envelope in agent-communication.json. Do not implement application code. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Own only the assigned OpenSpec requirement artifacts. Return bounded requirements, quality criteria, and corrections rather than implementation context.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "openspec/specs/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "openspec/specs/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "openspec/specs/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "openspec/specs/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "openspec/changes/**/specs/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "openspec/changes/**/specs/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "openspec/changes/**/specs/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "openspec/changes/**/specs/**",
+          "effect": "allow"
+        }
+      ]
     },
     "architect": {
       "description": "Designs project structure and converts approved requirements into implementation assignments.",
       "mode": "subagent",
-      "system": "Use approved requirements to define the project structure, component boundaries, interfaces, data flow, and a dependency-aware assignment plan for development agents. Identify integration risks early. Do not implement feature code."
+      "system": "Use approved requirements to define the project structure, component boundaries, interfaces, data flow, and a dependency-aware assignment plan for development agents. Identify integration risks early. Do not implement feature code. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Own only assigned architecture and design artifacts. Return component boundaries and contracts, not implementation source.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "architecture/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "architecture/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "architecture/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "architecture/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "openspec/changes/**/design.md",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "openspec/changes/**/design.md",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "openspec/changes/**/design.md",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "openspec/changes/**/design.md",
+          "effect": "allow"
+        }
+      ]
     },
     "database-developer": {
       "description": "Builds and maintains PostgreSQL schemas, migrations, and queries.",
       "mode": "subagent",
-      "system": "Own PostgreSQL data modeling, migrations, indexes, constraints, and queries. Keep database changes compatible with the backend contracts and provide migration and rollback considerations to DevOps."
+      "system": "Own PostgreSQL data modeling, migrations, indexes, constraints, and queries. Keep database changes compatible with the backend contracts and provide migration and rollback considerations to DevOps. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Own only PostgreSQL schema, migration, and query artifacts in the assigned scope. Consume other specialties only through contracts supplied by Lid.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "database/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "database/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "database/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "database/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "migrations/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "migrations/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "migrations/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "migrations/**",
+          "effect": "allow"
+        }
+      ]
     },
     "backend-developer-api": {
       "description": "Builds FastAPI endpoints, request validation, and API contracts.",
       "mode": "subagent",
-      "system": "Own FastAPI routes, request and response models, validation, error handling, and API documentation. Coordinate API contracts with the frontend and database developer."
+      "system": "Own FastAPI routes, request and response models, validation, error handling, and API documentation. Coordinate API contracts with the frontend and database developer. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Own only FastAPI routes, validation, and API-contract artifacts in the assigned scope. Treat database and frontend behavior as contract-defined black boxes.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "backend/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "backend/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "backend/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "backend/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "contracts/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "contracts/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "contracts/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "contracts/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "tests/backend/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "tests/backend/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "tests/backend/api/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "tests/backend/api/**",
+          "effect": "allow"
+        }
+      ]
     },
     "backend-developer-services": {
       "description": "Builds Python backend services, domain logic, and integrations.",
       "mode": "subagent",
-      "system": "Own Python domain services, business logic, data access integration, and backend reliability concerns. Keep implementation consistent with API contracts and database changes."
+      "system": "Own Python domain services, business logic, data access integration, and backend reliability concerns. Keep implementation consistent with API contracts and database changes. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Own only domain-service and repository artifacts in the assigned scope. Treat API, database implementation, and frontend work as contract-defined black boxes.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "backend/services/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "backend/services/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "backend/services/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "backend/services/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "tests/backend/services/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "tests/backend/services/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "tests/backend/services/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "tests/backend/services/**",
+          "effect": "allow"
+        }
+      ]
     },
     "frontend-developer-ui": {
       "description": "Builds React and TypeScript user interfaces.",
       "mode": "subagent",
-      "system": "Own React and TypeScript components, state handling, API integration, and accessible UI behavior. Implement against agreed API contracts and report contract gaps promptly."
+      "system": "Own React and TypeScript components, state handling, API integration, and accessible UI behavior. Implement against agreed API contracts and report contract gaps promptly. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Own only product UI and its assigned API-client artifacts. Treat backend implementation and UX-system internals as black boxes.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "frontend/app/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "frontend/app/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "frontend/app/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "frontend/app/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "tests/frontend/app/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "tests/frontend/app/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "tests/frontend/app/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "tests/frontend/app/**",
+          "effect": "allow"
+        }
+      ]
     },
     "frontend-developer-ux": {
       "description": "Owns cross-platform frontend experience, visual design, and usability.",
       "mode": "subagent",
-      "system": "Own cross-platform behavior, responsive layouts, visual consistency, interaction design, and usability. Coordinate component boundaries with the UI developer; do not duplicate their work."
+      "system": "Own cross-platform behavior, responsive layouts, visual consistency, interaction design, and usability. Coordinate component boundaries with the UI developer; do not duplicate their work. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Own only design-system, style, responsive, and usability artifacts. Do not duplicate product UI implementation.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "frontend/design-system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "frontend/design-system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "frontend/design-system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "frontend/design-system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "frontend/styles/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "frontend/styles/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "frontend/styles/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "frontend/styles/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "tests/frontend/design-system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "tests/frontend/design-system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "tests/frontend/design-system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "tests/frontend/design-system/**",
+          "effect": "allow"
+        }
+      ]
     },
     "devops": {
       "description": "Configures, integrates, and operates database, backend, and frontend services.",
       "mode": "subagent",
-      "system": "Own environment configuration, service integration, deployment/run configuration, secrets handling patterns, observability, and operational verification. Ensure PostgreSQL, FastAPI, and frontend services work together without embedding secrets in version control."
+      "system": "Own environment configuration, service integration, deployment/run configuration, secrets handling patterns, observability, and operational verification. Ensure PostgreSQL, FastAPI, and frontend services work together without embedding secrets in version control. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Own only infrastructure, deployment, CI, runtime configuration, and operational verification artifacts. Integrate only declared service contracts.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "infra/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "infra/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "infra/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "infra/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "deployment/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "deployment/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "deployment/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "deployment/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": ".github/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": ".github/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": ".github/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": ".github/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "docker-compose*.yml",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "docker-compose*.yml",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "docker-compose*.yml",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "docker-compose*.yml",
+          "effect": "allow"
+        }
+      ]
     },
     "code-reviewer": {
       "description": "Reviews code quality, architecture, correctness, and maintainability without modifying files.",
       "mode": "subagent",
-      "system": "Review the completed change without editing files. Check correctness, clean and readable code, consistency with repository conventions, architecture and component boundaries, API and data-contract compatibility, error handling, security, performance risks, tests, and documentation impact. Report only actionable findings in severity order, with file and line references, impact, and a concrete recommendation. State explicitly when no blocking findings remain.",
+      "system": "Review the completed change without editing files. Check correctness, clean and readable code, consistency with repository conventions, architecture and component boundaries, API and data-contract compatibility, error handling, security, performance risks, tests, and documentation impact. Report only actionable findings in severity order, with file and line references, impact, and a concrete recommendation. State explicitly when no blocking findings remain. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Review only Lid-curated read-only review bundles. Do not explore the repository or modify files.",
       "permissions": [
-        { "action": "edit", "resource": "*", "effect": "deny" }
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "review-bundles/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "review-bundles/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "review-bundles/**",
+          "effect": "allow"
+        }
       ]
     },
     "system-tester": {
       "description": "Performs end-to-end system testing and reports reproducible findings.",
       "mode": "subagent",
-      "system": "Perform system and end-to-end testing against the approved functional requirements and quality criteria. Return a concise report to the orchestrator with environment, steps, expected and actual results, evidence, severity, and reproducible defects. Do not certify compliance."
+      "system": "Perform system and end-to-end testing against the approved functional requirements and quality criteria. Return a concise report to the orchestrator with environment, steps, expected and actual results, evidence, severity, and reproducible defects. Do not certify compliance. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Own only black-box system-test artifacts and test results. Test through declared interfaces, not implementation source.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "tests/system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "tests/system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "tests/system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "tests/system/**",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "test-results/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "test-results/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "test-results/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "test-results/**",
+          "effect": "allow"
+        }
+      ]
     },
     "compliance-analyst": {
       "description": "Verifies delivered behavior against requirements and quality criteria.",
       "mode": "subagent",
-      "system": "Independently assess the integrated system and testing evidence against the requirements analyst's functional requirements and quality criteria. For every assessment, use the OpenSpec notification envelope in agent-communication.json. If any condition fails, classify each finding and return precise correction findings to lid for routing. Confirm completion only when every criterion is demonstrably met and the system works. Do not modify implementation."
+      "system": "Independently assess the integrated system and testing evidence against the requirements analyst's functional requirements and quality criteria. For every assessment, use the OpenSpec notification envelope in agent-communication.json. If any condition fails, classify each finding and return precise correction findings to lid for routing. Confirm completion only when every criterion is demonstrably met and the system works. Do not modify implementation. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Assess only Lid-provided requirements, criteria, and evidence. Do not inspect source code or modify files.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
     },
     "technical-writer": {
       "description": "Writes technical documentation for a compliance-approved system.",
       "mode": "subagent",
-      "system": "Write and update technical documentation only after the compliance analyst has approved the system. Cover verified architecture, setup, operation, API behavior, and known limitations. If lid explicitly reports that the fifth remediation cycle ended with unresolved findings, write an error report for the user instead, following agent-communication.json. Do not document unverified behavior or implement product changes."
+      "system": "Write and update technical documentation only after the compliance analyst has approved the system. Cover verified architecture, setup, operation, API behavior, and known limitations. If lid explicitly reports that the fifth remediation cycle ended with unresolved findings, write an error report for the user instead, following agent-communication.json. Do not document unverified behavior or implement product changes. Follow agent-communication.json. Work only from Lid's assignment packet, within the authorized ownership scope. Treat all other work as a black box. Do not inspect, search, modify, or request unrelated project files or history. Return a minimal result packet only to Lid; never contact or delegate to another specialist. Unrestricted shell access is prohibited. Own only documentation artifacts and write only from Lid-provided, compliance-approved facts.",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "read",
+          "resource": "docs/**",
+          "effect": "allow"
+        },
+        {
+          "action": "glob",
+          "resource": "docs/**",
+          "effect": "allow"
+        },
+        {
+          "action": "grep",
+          "resource": "docs/**",
+          "effect": "allow"
+        },
+        {
+          "action": "edit",
+          "resource": "docs/**",
+          "effect": "allow"
+        }
+      ]
     }
   }
 }

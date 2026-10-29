@@ -30,3 +30,17 @@ The system SHALL record an exposure before a participant is included in experime
 #### Scenario: Conversion without exposure
 - **WHEN** an event is received for a participant without a recorded experiment exposure
 - **THEN** the system excludes that participant from exposure-based experiment analysis and records a data-quality warning
+
+### Requirement: Active experiment change control
+The system SHALL version experiment configuration and permit only operational updates while an experiment is active. Changes to variants, allocation, audience, randomization unit, exposure event, primary metric, alpha, or statistical method SHALL require cloning a new experiment.
+
+#### Scenario: Protected active configuration is changed
+- **WHEN** an analyst attempts to change a protected field on an active experiment
+- **THEN** the system rejects the direct change and offers a clone with a new experiment identifier
+
+### Requirement: Restart-safe experiment state
+The system SHALL restore active experiment configuration, participant assignments, and processing checkpoints after service or worker reload.
+
+#### Scenario: Assignment after reload
+- **WHEN** the assignment service reloads and a previously assigned participant requests an active experiment
+- **THEN** the system returns the persisted variant and assignment version

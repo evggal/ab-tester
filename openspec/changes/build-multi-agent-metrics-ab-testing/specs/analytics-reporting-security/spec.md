@@ -20,6 +20,13 @@ The system SHALL grant DataLens a database identity with read-only access limite
 - **WHEN** the DataLens database identity attempts to modify operational or reporting data
 - **THEN** the database denies the operation
 
+### Requirement: Restricted development analytics
+The system SHALL restrict agent-work, review, compliance, and token-consumption dashboards to Lid, administrators, and explicitly authorized project members.
+
+#### Scenario: Product user requests development analytics
+- **WHEN** a user without development-analytics access requests an internal dashboard or dataset
+- **THEN** the system denies access without exposing internal metrics
+
 ### Requirement: Sensitive-data protection and auditability
 The system SHALL redact secrets, credentials, authorization headers, private prompts, personal identifiers, and unredacted sensitive payloads before persistence or reporting, and SHALL audit configuration changes.
 
